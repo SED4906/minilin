@@ -1,0 +1,38 @@
+#!/bin/sh
+# udhcpc script edited by Tim Riker <Tim@Rikers.org>
+# and modified by SED4906 to achieve workiness
+
+RESOLV_CONF="/etc/resolv.conf"
+
+case "$1" in
+	deconfig )
+		echo "Clearing IP addresses on $interface, upping it"
+        ip -4 addr flush $interface
+        ip link set $interface up
+		;;
+
+	renew | bound )
+		echo "Setting IP address $ip on $interface"
+		ip addr add $ip/$mask dev $interface
+		ip route add default via $router dev $interface
+
+		# If the file is a symlink somewhere (like /etc/resolv.conf
+		# pointing to /run/resolv.conf), make sure things work.
+		if test -L "$RESOLV_CONF"; then
+			# If it's a dangling symlink, try to create the target.
+			test -e "$RESOLV_CONF" || touch "$RESOLV_CONF"
+		fi
+		realconf=$(readlink -f "$RESOLV_CONF" 2>/dev/null || echo "$RESOLV_CONF")
+		echo "Recreating $realconf"
+		tmpfile="$realconf-$$"
+		> "$tmpfile"
+		[ -n "$domain" ] && echo "search $domain" >> "$tmpfile"
+		for i in $dns ; do
+			echo "Adding DNS server $i"
+			echo "nameserver $i" >> "$tmpfile"
+		done
+		mv "$tmpfile" "$realconf"
+		;;
+esac
+
+exit 0

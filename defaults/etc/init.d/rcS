@@ -1,0 +1,20 @@
+#!/bin/sh
+mount -t devtmpfs none /dev
+mount -t proc proc /proc
+mount -t sysfs none /sys
+mount -o remount,rw /
+mkdir -p /dev/pts
+mount -t devpts devpts /dev/pts
+mkdir -p /dev/shm
+mount -a
+mdev -s
+hostname -F /etc/hostname
+ifplugd
+udhcpc
+touch /etc/passwd
+touch /etc/group
+addgroup -g 0 -S root
+adduser -h /root -s /bin/sh -G root -u 0 -S root
+passwd root
+dropbear -R
+getty 0 /dev/tty1

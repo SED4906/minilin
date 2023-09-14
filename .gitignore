@@ -1,0 +1,6 @@
+isoimage/
+packages/
+rootfs/
+sources/
+minilin.iso
+authorized_keys
